@@ -8,7 +8,7 @@ function inclPlaneSimulation(isFrictionVariable)
 %       (optional) isFrictionVariable = bool = if true, will run simulation
 %           with a variable friction plane, where there are "patches" of 
 %           friction with different friction coefficients. Otherwise, will 
-%           run simulation with constant friction plane.
+%           run simulation with constant friction plane. Default = false
 %
 %   NOTES:
 %       Default is to run constant friction model.
@@ -26,24 +26,31 @@ if nargin < 1
     isFrictionVariable = false;
 end
 
-% Set initial conditions
-tStart = 0;    % [s]
-tEnd   = 1;    % [s]
-nGrid  = 100;
+% Set initial conditions, parameters for dynamics and simulation
+tStart = 0;     % [s]
+tEnd   = 2;     % [s]
+nGrid  = 1000;
 tGrid  = linspace(tStart, tEnd, nGrid);
 
-param.theta = pi/6;
-param.mus   = 0.5;
-param.muk   = 0.2;
+param.theta = pi/10;
 param.g     = 9.81;
 
 zInit = zeros(2,1);
 
+% Set friction model
+mus      = 0.5;
+muk      = 0.2;
+patchLen = 10;     %[m]
 if isFrictionVariable
-    error('TODO: Implement the variable friction dynamics model :)');
+    % Uncomment for on/off friction model 
+    param.mus = @(x) mus * (mod(round(x/patchLen),2) - 1);
+    param.muk = @(x) muk * (mod(round(x/patchLen),2) - 1);
 else
-    dynFun = @(t,z)( inclinedPlaneDynamics(z, param) );
+    param.mus = @(x) mus;
+    param.muk = @(x) muk;
 end
+
+dynFun = @(t,z)( inclinedPlaneDynamics(z, param) );
 
 % Run simulation
 [zGrid, ~] = runSimulation(dynFun, tGrid, zInit, 'rk4');
