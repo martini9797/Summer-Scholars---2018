@@ -28,11 +28,11 @@ end
 
 % Set initial conditions, parameters for dynamics and simulation
 tStart = 0;     % [s]
-tEnd   = 2;     % [s]
+tEnd   = 10;    % [s]
 nGrid  = 1000;
 tGrid  = linspace(tStart, tEnd, nGrid);
 
-param.theta = pi/10;
+param.theta = pi/6;
 param.g     = 9.81;
 
 zInit = zeros(2,1);
@@ -73,5 +73,33 @@ plot(tGrid, zGrid(2,:), 'k');
 title('Velocity vs. Time');
 xlabel('Time [s]');
 ylabel('Velocity [m/s]');
+
+% Animate and Record the Simulation
+figure(62818); clf;
+hold on;
+title('Animation of Sliding Box');
+
+% Draw Inclined Plane
+planeThick = .01; %[m]
+xFlatStart = zGrid(1,1);
+r          = [cos(param.theta) -sin(param.theta); 
+              sin(param.theta)  cos(param.theta)];
+
+if isFrictionVariable
+    xFlatEnd = round(zGrid(1,end)/patchLen) * patchLen;
+else
+    xFlatEnd = zGrid(1,end);
+    xFlat    = [xFlatStart xFlatEnd xFlatEnd xFlatStart];
+    yFlat    = planeThick * [0 0 -1 -1];
+end
+
+planeCoor = [xFlat; yFlat]' * r;
+planeCoor = planeCoor';
+axis([planeCoor(1,1) inf -inf planeCoor(2,end)]);
+daspect([1 1 1]);
+fill(planeCoor(1,:),planeCoor(2,:),'k');
+
+
+
 
 end
