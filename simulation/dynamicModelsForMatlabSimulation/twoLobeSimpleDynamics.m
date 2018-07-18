@@ -1,4 +1,5 @@
 function dz = twoLobeSimpleDynamics(t, z, param)
+%   dz = twoLobeSimpleDynamics(t,z,param)
 %
 %   This function computes the dynamics of a two lobed, foam robot that has
 %   been simplified as two point masses with oscilating mass values between

@@ -1,4 +1,5 @@
 function inclPlaneSimulation(isFrictionVariable)
+%   inclPlaneSimulation(isFrictionVariable)
 %
 %   This function runs a simulation of a point mass / box on an inclined
 %   plane. Two dynamic models are available: constant friction inclined
@@ -27,22 +28,22 @@ end
 
 % Set initial conditions, parameters for dynamics and simulation
 tStart = 0;     % [s]
-tEnd   = 5;     % [s]
-nGrid  = 1000;
+tEnd   = 10;     % [s]
+nGrid  = 5000;
 tGrid  = linspace(tStart, tEnd, nGrid);
 
-param.theta = pi/6;
+param.theta = pi/10;
 param.g     = 9.81;
 
 zInit = zeros(2,1);
 
 % Set friction model
-mus      = 0.4;
-muk      = 0.1;
+mus      = 0.8;
+muk      = 0.8;
 patchLen = 10;  %[m]
 if isFrictionVariable
-    param.mus = @(x) mus * (mod(round(x/patchLen),2) - 1);
-    param.muk = @(x) muk * (mod(round(x/patchLen),2) - 1);
+    param.mus = @(x) mus * (mod(floor(x/patchLen),2));
+    param.muk = @(x) muk * (mod(floor(x/patchLen),2));
 else
     param.mus = @(x) mus;
     param.muk = @(x) muk;
@@ -73,15 +74,20 @@ xlabel('Time [s]');
 ylabel('Velocity [m/s]');
 
 % Animation settings
-boxH   = 0.05 * zGrid(1,end);   %[m]
-boxW   = 0.05 * zGrid(1,end);   %[m]
+%boxH   = 0.05 * zGrid(1,end);   %[m]
+%boxW   = 0.05 * zGrid(1,end);   %[m]
+boxH   = 1;     %[m]
+boxW   = 1;     %[m]
 boxCol = [48 15 0] ./ 255;  % rgb, Tufts brown for a brown box (:
-%dt     = tGrid(2) - tGrid(1);   %[s]
 
 % Animate Simulation
-hFig = figure(62818); clf;
+animateFig  = figure(62818); clf;
+animateFig.WindowState = 'maximized';
+animateAxis = gca;
 hold on;
-title('Animation of Sliding Box');
+title( {'Animation of Sliding Box',...
+        ['Box Travels ',num2str(zGrid(1,end),2),...
+         ' Meters in ',num2str(tGrid(end),2),' Seconds']} );
 daspect([1 1 1]);
 set(gca,'xtick',[],'ytick',[]);
 
@@ -92,43 +98,45 @@ r = [cos(param.theta) -sin(param.theta);
 % Draw Inclined Plane
 xFlatStart = zGrid(1,1);
 
-if isFrictionVariable
-    
-    % Determine the vertices of each patch along the plane
-    numPatches = round(zGrid(1,end)/patchLen);
-    xFlatEnd   = numPatches * patchLen;
-    xFlat      = xFlatStart:patchLen:xFlatEnd;
-    xMat       = [ xFlat(1:end-1); xFlat(2:end); xFlat(2:end); ...
-                   xFlat(1:end-1); xFlat(1:end-1)];
-    planeThick = 0.01 * xFlatEnd;      %[m]
-    yFlat      = planeThick * [0 0 -1 -1 0];
-    yMat       = repmat(yFlat,1,numPatches);
-    
-    % Reshape into coumn vectors to do math to rotate plane
-    xMat       = reshape(xMat,[],1);
-    yMat       = reshape(yMat,[],1);
-    planeCoor  = [xMat yMat] * r;
-    
-    % Reshape back into matrices that patch() accepts
-    xMat       = reshape(planeCoor(:,1),[],numPatches);
-    yMat       = reshape(planeCoor(:,2),[],numPatches);
-    patch(xMat,yMat,rand(numPatches,1));
-    axis( [ xMat(1,1) xMat(3,end) yMat(2,end) yMat(1,1)+boxH ] );
+if zGrid(1,end) > 0
+    if isFrictionVariable
 
-else
-    
-    %Determine the vertices of the plane, rotate and draw it
-    xFlatEnd   = zGrid(1,end);
-    xFlat      = [xFlatStart xFlatEnd xFlatEnd xFlatStart]';
-    planeThick = 0.0025 * xFlatEnd;      %[m]
-    yFlat      = planeThick * [0 0 -1 -1]';
-    planeCoor  = [xFlat yFlat] * r;
-    patch(planeCoor(:,1),planeCoor(:,2),'k');
-    axis( [ planeCoor(1,1) planeCoor(2,1) planeCoor(end - 1,2) ...
-                 planeCoor(1,2)+boxH ] );
+        % Determine the vertices of each patch along the plane
+        numPatches = round(zGrid(1,end)/patchLen)+1;
+        xFlatEnd   = numPatches * patchLen;
+        xFlat      = xFlatStart:patchLen:xFlatEnd;
+        xMat       = [ xFlat(1:end-1); xFlat(2:end); xFlat(2:end); ...
+                       xFlat(1:end-1); xFlat(1:end-1)];
+        planeThick = 0.01 * xFlatEnd;      %[m]
+        yFlat      = planeThick * [0 0 -1 -1 0];
+        yMat       = repmat(yFlat,1,numPatches);
 
+        % Reshape into coumn vectors to do math to rotate plane
+        xMat       = reshape(xMat,[],1);
+        yMat       = reshape(yMat,[],1);
+        planeCoor  = [xMat yMat] * r;
+
+        % Reshape back into matrices that patch() accepts
+        xMat       = reshape(planeCoor(:,1),[],numPatches);
+        yMat       = reshape(planeCoor(:,2),[],numPatches);
+        patch(xMat,yMat,rand(numPatches,1));
+        axis( [ xMat(1,1) xMat(3,end) yMat(2,end) yMat(1,1)+boxH ] );
+
+    else
+
+        %Determine the vertices of the plane, rotate and draw it
+        xFlatEnd   = zGrid(1,end);
+        xFlat      = [xFlatStart xFlatEnd xFlatEnd xFlatStart]';
+        planeThick = 0.0025 * xFlatEnd;      %[m]
+        yFlat      = planeThick * [0 0 -1 -1]';
+        planeCoor  = [xFlat yFlat] * r;
+        patch(planeCoor(:,1),planeCoor(:,2),'k');
+        axis( [ planeCoor(1,1) planeCoor(2,1) planeCoor(end - 1,2) ...
+                     planeCoor(1,2)+boxH ] );
+
+    end
 end
-
+    
 % Determine vertices of the box as it slides down the ramp
 xBox    = [ zGrid(1,:); zGrid(1,:); zGrid(1,:) + boxW; zGrid(1,:) + boxW ];
 yBox    = repmat([0; boxH; boxH; 0],1,size(zGrid,2));
@@ -147,7 +155,7 @@ while currT < tGrid(end)
     xNow = interp1(tGrid,xBox',currT,'linear');
     yNow = interp1(tGrid,yBox',currT,'linear');
     
-    box  = patch(xNow',yNow',boxCol);
+    box  = patch(animateAxis,xNow',yNow',boxCol);
     drawnow;
     
     currT = toc(startT);

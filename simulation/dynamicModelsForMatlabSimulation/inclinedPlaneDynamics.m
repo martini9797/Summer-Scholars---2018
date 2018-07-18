@@ -1,4 +1,5 @@
 function dz = inclinedPlaneDynamics(z, param)
+%   dz = inclinedPlaneDynamics(z,param)
 %
 %   This function coputes the dynamics of a point mass / box on an inclined
 %   plane. The plane can have variable coefficient of friction or a
@@ -37,10 +38,13 @@ acc = 0;
 
 % Determine acceleration 
 if vel ~= 0
-    acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta));
+    acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta))*sign(vel);
 else
     if sin(param.theta) > param.mus(pos)*cos(param.theta)
-        acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta));
+        acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta)*sign(vel));
+    else
+        acc=0;
+        vel=0;
     end
 end
 
