@@ -1,5 +1,4 @@
 function simulationTest()
-%
 %   simulationTest()
 %
 %   This function runs a simulation testing the newly written dynamics 
