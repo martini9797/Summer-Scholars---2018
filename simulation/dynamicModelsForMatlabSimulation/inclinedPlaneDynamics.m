@@ -7,13 +7,16 @@ function dz = inclinedPlaneDynamics(z, param)
 %
 %   INPUTS:
 %       z = [2, 1] = [position; velocity] = current state of mass
-%       param = struct = parameters for system
+%       param = struct = parameters for system and it's discretization 
 %           .theta = scalar = angle between the plane and horizontal axis
-%           .mus = function handle = coefficient of static friction 
-%               mus = mus(x)
-%           .muk = function handle = coefficient of kinetic friction
-%               muk = muk(x)
-%           .g = scalar = gravity constant
+%           .mus   = function handle = coefficient of static friction 
+%                    mus = mus(x)
+%           .muk   = function handle = coefficient of kinetic friction
+%                    muk = muk(x)
+%           .g     = scalar = gravity constant
+%           .tol   = (optional) = scalar = tolerance for determining when 
+%                    the problem is a statics vs. dynamics problem 
+%                    default = 1e-08
 %
 %   OUTPUTS:
 %       dz = [2, 1] = [velocity; acceleration] = time derivative of current
@@ -31,20 +34,30 @@ function dz = inclinedPlaneDynamics(z, param)
 %   Date: Jun. 14, 2018
 %
 
-% Pull out velocity and initialize acceleration
+% Pull out states and initizlize acceleration
 pos = z(1);
 vel = z(2);
 acc = 0;
 
-% Determine acceleration 
-if vel ~= 0
-    acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta))*sign(vel);
+% Pull out parameters to make equations a little more readable
+theta = param.theta;
+mus   = param.mus;
+muk   = param.muk;
+g     = param.g;
+
+if ~isfield(param,'tol')
+    tol = 1e-08;
 else
-    if sin(param.theta) > param.mus(pos)*cos(param.theta)
-        acc = param.g*(sin(param.theta) - param.muk(pos)*cos(param.theta)*sign(vel));
-    else
-        acc=0;
-        vel=0;
+    tol = param.tol;
+end
+
+% Determine acceleration 
+if vel > tol            % Dynamics problem
+    acc = g * ( sin(theta) - muk(pos)*cos(theta)*sign(vel) );
+elseif vel < tol        % If crossed zero (tolerance within 0), stopped moving and turns into statics problem
+    vel = 0;
+    if sin(theta) > mus(pos)*cos(theta)
+        acc = g * (sin(theta) - mus(pos)*cos(theta));
     end
 end
 

@@ -7,7 +7,7 @@ function inclPlaneSimulation(isFrictionVariable)
 %
 %   INPUTS:
 %       isFrictionVariable (optional) = bool = if true, will run simulation
-%           with a variable friction plane, where there are "patches" of 
+% %           with a variable friction plane, where there are "patches" of 
 %           friction with different friction coefficients. Otherwise, will 
 %           run simulation with constant friction plane. Default = false
 %
@@ -27,22 +27,23 @@ if nargin < 1
 end
 
 % Set initial conditions, parameters for dynamics and simulation
-tStart = 0;     % [s]
-tEnd   = 10;     % [s]
-nGrid  = 5000;
+tStart = 0;      % [s]
+tEnd   = 30;     % [s]
+nGrid  = 10000;
 tGrid  = linspace(tStart, tEnd, nGrid);
 
 param.theta = pi/10;
 param.g     = 9.81;
+param.tol   = 1e-10;
 
 zInit = zeros(2,1);
 
 % Set friction model
-mus      = 0.8;
-muk      = 0.8;
+mus      = 0.9;
+muk      = 0.7;
 patchLen = 10;  %[m]
 if isFrictionVariable
-    param.mus = @(x) mus * (mod(floor(x/patchLen),2));
+    param.mus = @(x) mus * (mod(floor(x/patchLen),2));    % Current functions define an on/off friction model with friction turned off during the first segment of inclined 4plane 
     param.muk = @(x) muk * (mod(floor(x/patchLen),2));
 else
     param.mus = @(x) mus;
@@ -138,7 +139,7 @@ if zGrid(1,end) > 0
 end
     
 % Determine vertices of the box as it slides down the ramp
-xBox    = [ zGrid(1,:); zGrid(1,:); zGrid(1,:) + boxW; zGrid(1,:) + boxW ];
+xBox    = [ zGrid(1,:); zGrid(1,:); zGrid(1,:) - boxW; zGrid(1,:) - boxW ];
 yBox    = repmat([0; boxH; boxH; 0],1,size(zGrid,2));
 boxCoor = [reshape(xBox,[],1) reshape(yBox,[],1)] * r;
 xBox    = reshape(boxCoor(:,1),[],size(zGrid,2));
